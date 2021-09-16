@@ -25,11 +25,15 @@ Descripcion: un mini juego para acostumbrase a la plataforma
 //-------VARIABLES DE PROGRAMA
 bool b1 =1;   //variable booleanaa para J1
 bool b2 =1;   //variable booleana para J2
+unsigned char cuentaJ1=0,cuentaJ2=0;   //variables contadoras para jugadores
+
 /*-----------------------------------------------------------------------------
  ------------------------ PROTOTIPOS DE FUNCIONES ------------------------------
  -----------------------------------------------------------------------------*/
-void GPIOF0_vISR(void);   //interrupcion en boton 1, J1
-void GPIOF4_vISR(void);   //interrupcion en boton 2, J2
+void semaforo(void);      //prototipo de semaforo inicial
+void cuenta_j1 (void);    //prototipo de cuenta jugador 1
+void cuenta_j2 (void);    //prototipo de cuenta jugador 2
+void ganador (void);      //prototipo de jugador ganador
 /*-----------------------------------------------------------------------------
  --------------------------- INTERRUPCIONES -----------------------------------
  -----------------------------------------------------------------------------*/
@@ -52,31 +56,66 @@ void setup()
  -----------------------------------------------------------------------------*/
 void loop() 
 {
-  b1 = digitalRead(31);
-  b2 = digitalRead(17);
+  //-------SE LLAMAN FUNCIONES
+  cuenta_j1();    //funcion del boton 1, J1
+  cuenta_j2();    //funcion del boton 2, J2
+  ganador();
+}
+/*-----------------------------------------------------------------------------
+ ----------------------------- MAIN LOOP --------------------------------------
+ -----------------------------------------------------------------------------*/
+//-------FUNCION DE SEMAFORO INICIAL
+void semaforo(void){
+  
+}
+
+//-------FUNCION PARA CUENTA DEL JUGADOR 1
+void cuenta_j1 (void){
+  b1 = digitalRead(31);       //se toma la lectura del boton 1
   if (b1==0)
   {
+    digitalWrite(LED_J1, 1);
+    cuentaJ1++;
+  }
+  else
+  {
+    digitalWrite(LED_J1, 0);
+  }
+  
+}
+
+//------FUNCION PARA CUENTA DEL JUGADOR 2
+void cuenta_j2 (void){
+  b2 = digitalRead(17);       //se toma la lectura del boton 2
+  if (b2==0)
+  {
     digitalWrite(LED_J2, 1);
+    cuentaJ2++;
   }
   else
   {
     digitalWrite(LED_J2, 0);
   }
+}
+
+//-------FUNCION PARA GANADOR
+void ganador (void){
+  //-------EVALUAR SI LLEGO A LA CUENTA
+  if (cuentaJ1==7 && cuentaJ2<7){
+    for(int i=0; i<=15;i++ ){
+      digitalWrite(LED_J1, 1);
+      delay(500);
+      digitalWrite(LED_J1, 0);
+      delay(500);
+    }
+  }
+  else
+  {
+    digitalWrite(LED_J1, 0);
+    }
+
   
-  /*
-  digitalWrite(LED_J1, 1);
-  delay(1000);
-  digitalWrite(LED_J1, 0);
-  delay(1000);
-  //
-  digitalWrite(LED_J2, 1);
-  delay(1000);
-  digitalWrite(LED_J2, 0);
-  delay(1000);
-  //
-  digitalWrite(LED_sem, 1);
-  delay(1000);
-  digitalWrite(LED_sem, 0);
-  delay(1000);
-  */
+  if (cuentaJ1<7 && cuentaJ2==7){
+    
+  }
 }
