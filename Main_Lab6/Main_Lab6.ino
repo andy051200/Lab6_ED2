@@ -25,8 +25,9 @@ Descripcion: un mini juego para acostumbrase a la plataforma
 //-------VARIABLES DE PROGRAMA
 bool b1 =1;   //variable booleanaa para J1
 bool b2 =1;   //variable booleana para J2
-unsigned char cuentaJ1=0,cuentaJ2=0;   //variables contadoras para jugadores
-
+unsigned char cuentaJ1=0,cuentaJ2=0, cuentaSEM;   //variables contadoras para jugadores
+bool antirrebote1, antirrebote2, antirrebote0;    //variables para antirrebote
+bool encendido;
 /*-----------------------------------------------------------------------------
  ------------------------ PROTOTIPOS DE FUNCIONES ------------------------------
  -----------------------------------------------------------------------------*/
@@ -50,6 +51,11 @@ void setup()
   pinMode(LED_J1, OUTPUT);      //led para J1, rojo
   pinMode(LED_J2, OUTPUT);      //led para J2, verde
   pinMode(LED_sem, OUTPUT);     //led para comodin
+  //-------LIMPIEZA DE VARIABLES
+  cuentaJ1=0;
+  cuentaJ2=0;
+  //-------INIT PUERTO SERIAL MONITOREO
+  Serial.begin(9600);
 }
 /*-----------------------------------------------------------------------------
  ----------------------------- MAIN LOOP --------------------------------------
@@ -57,25 +63,62 @@ void setup()
 void loop() 
 {
   //-------SE LLAMAN FUNCIONES
+  semaforo();     //funcion de semaforo de inicio
   cuenta_j1();    //funcion del boton 1, J1
   cuenta_j2();    //funcion del boton 2, J2
   ganador();
+ 
 }
 /*-----------------------------------------------------------------------------
  ----------------------------- MAIN LOOP --------------------------------------
  -----------------------------------------------------------------------------*/
 //-------FUNCION DE SEMAFORO INICIAL
 void semaforo(void){
-  
+  b1 = digitalRead(31);       //se toma la lectura del boton 1
+  b2 = digitalRead(17);       //se toma la lectura del boton 2
+  if (b1==0 && b2==0){
+    antirrebote0=1;
+  }
+  if (antirrebote0==1 && b1==0 && b2==0){
+    antirrebote0=0;
+    digitalWrite(LED_sem, 1); //se prende led azul
+    digitalWrite(LED_J2, 0);
+    digitalWrite(LED_J1, 0);
+    delay(1000);
+    digitalWrite(LED_J1, 1);  //se prende led rojo
+    digitalWrite(LED_J2, 0);
+    digitalWrite(LED_sem, 0);
+    delay(1000);
+    digitalWrite(LED_J2, 1);  //se prende led verde
+    digitalWrite(LED_J1, 0);
+    digitalWrite(LED_sem, 0);
+    delay(1000);
+    encendido=1;
+  }
+  else{
+    digitalWrite(LED_J2, 0);
+    digitalWrite(LED_J1, 0);
+    digitalWrite(LED_sem, 0);
+    //encendido=0;
+  }
 }
 
 //-------FUNCION PARA CUENTA DEL JUGADOR 1
 void cuenta_j1 (void){
   b1 = digitalRead(31);       //se toma la lectura del boton 1
-  if (b1==0)
+  //-------antirrebote1
+  if (b1==0 && encendido==1)    //boton apachado
   {
+    antirrebote1=1;
+  }
+  else{
+    antirrebote1=0;
+  } 
+  //-------accion luego del antirrebote1
+  if (antirrebote1==1 && b1==0 && encendido==1){
     digitalWrite(LED_J1, 1);
     cuentaJ1++;
+    antirrebote1=0;
   }
   else
   {
@@ -87,10 +130,19 @@ void cuenta_j1 (void){
 //------FUNCION PARA CUENTA DEL JUGADOR 2
 void cuenta_j2 (void){
   b2 = digitalRead(17);       //se toma la lectura del boton 2
-  if (b2==0)
+  //-------antirrebote2
+  if (b2==0 && encendido==1)    //boton apachado
   {
+    antirrebote2=1;
+  }
+  else{
+    antirrebote2=0;
+  } 
+  //-------accion luego del antirrebote2
+  if (antirrebote2==1 && b2==0 && encendido==1){
     digitalWrite(LED_J2, 1);
     cuentaJ2++;
+    antirrebote2=0;
   }
   else
   {
@@ -100,22 +152,54 @@ void cuenta_j2 (void){
 
 //-------FUNCION PARA GANADOR
 void ganador (void){
-  //-------EVALUAR SI LLEGO A LA CUENTA
-  if (cuentaJ1==7 && cuentaJ2<7){
+  //-------mensajes durante el juego
+  if (cuentaJ1<7 && cuentaJ2<7 && encendido==1){
+    Serial.println("---------------------");
+    Serial.println("Cuenta J1 | Cuenta J2");
+    Serial.print("    ");
+    Serial.print(cuentaJ1);
+    Serial.print("     |    ");
+    Serial.print(cuentaJ2);
+    Serial.println("    ");
+   
+  }
+  //-------mensaje si gana J1
+  else if (cuentaJ1>7 && cuentaJ2<7 && encendido==1){
+    Serial.println("---------------------");
+    Serial.println("Cuenta J1 | Cuenta J2");
+    Serial.print("    ");
+    Serial.print(cuentaJ1);
+    Serial.print("     |    ");
+    Serial.print(cuentaJ2);
+    Serial.println("    ");
+    Serial.println("J1 ES EL GANADOR");
     for(int i=0; i<=15;i++ ){
       digitalWrite(LED_J1, 1);
       delay(500);
       digitalWrite(LED_J1, 0);
       delay(500);
     }
+    cuentaJ1=0;
+    encendido=0;
   }
-  else
+  //-------mensaje si gana J2
+  else if (cuentaJ1<7 && cuentaJ2>7 && encendido==1)
   {
-    digitalWrite(LED_J1, 0);
-    }
-
-  
-  if (cuentaJ1<7 && cuentaJ2==7){
-    
+    Serial.println("---------------------");
+    Serial.println("Cuenta J1 | Cuenta J2");
+    Serial.print("    ");
+    Serial.print(cuentaJ1);
+    Serial.print("     |    ");
+    Serial.print(cuentaJ2);
+    Serial.println("    ");
+    Serial.println("J2 ES EL GANADOR");
+    for(int i=0; i<=15;i++ ){
+      digitalWrite(LED_J2, 1);
+      delay(500);
+      digitalWrite(LED_J2, 0);
+      delay(500);
+      }
+      cuentaJ2=0;
+      encendido=0;
   }
 }
